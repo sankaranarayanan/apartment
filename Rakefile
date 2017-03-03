@@ -3,11 +3,15 @@ Bundler.setup
 Bundler::GemHelper.install_tasks
 
 require 'appraisal'
-
 require "rspec"
 require "rspec/core/rake_task"
 
-RSpec::Core::RakeTask.new(:spec => %w{ db:copy_credentials db:test:prepare }) do |spec|
+# RSpec::Core::RakeTask.new(:spec => %w{ db:copy_credentials db:test:prepare }) do |spec|
+#   spec.pattern = "spec/**/*_spec.rb"
+#   # spec.rspec_opts = '--order rand:16996'
+# end
+
+RSpec::Core::RakeTask.new(:spec => %w{ db:copy_credentials db:test:prepare_mssql }) do |spec|
   spec.pattern = "spec/**/*_spec.rb"
   # spec.rspec_opts = '--order rand:16996'
 end
@@ -31,7 +35,7 @@ task :default => :spec
 
 namespace :db do
   namespace :test do
-    task :prepare => %w{postgres:drop_db postgres:build_db mysql:drop_db mysql:build_db}
+    task :prepare => %w{postgres:drop_db postgres:build_db mysql:drop_db mysql:build_db mssql:drop_db mssql:build_db}
   end
 
   desc "copy sample database credential files over if real files don't exist"
@@ -64,6 +68,28 @@ namespace :postgres do
 
 end
 
+namespace :mssql do
+  require 'active_record'
+  require "#{File.join(File.dirname(__FILE__), 'spec', 'support', 'config')}"
+
+  desc 'Build the MSSQL test databases'
+  task :build_db do
+    # %x{ createdb -E UTF8 -H#{ms_config['host']} #{ms_config['database']} -U#{ms_config['username']} } rescue "test db already exists"
+    ActiveRecord::Base.establish_connection ms_config.merge('database' => 'master')    
+    connection = ActiveRecord::Base.connection
+    connection.create_database ms_config['database'], ms_config
+    ActiveRecord::Migrator.migrate('spec/dummy/db/migrate')
+  end
+
+  desc "drop the MSSQL test database"
+  task :drop_db do
+    puts "dropping database #{ms_config['database']}"
+    ActiveRecord::Base.establish_connection ms_config.merge('database' => 'master')
+    connection = ActiveRecord::Base.connection
+    connection.drop_database ms_config['database']
+  end
+end
+
 namespace :mysql do
   require 'active_record'
   require "#{File.join(File.dirname(__FILE__), 'spec', 'support', 'config')}"
@@ -90,6 +116,10 @@ end
 
 def pg_config
   config['postgresql']
+end
+
+def ms_config
+  config['mssql']
 end
 
 def my_config

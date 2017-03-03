@@ -25,10 +25,12 @@ shared_examples_for "a generic apartment adapter able to handle custom configura
 
     describe "#create" do
       it "should establish_connection with the separate connection with expected args" do
+
         expect(Apartment::Adapters::AbstractAdapter::SeparateDbConnectionHandler).to receive(:establish_connection).with(expected_args).and_call_original
 
         # because we dont have another server to connect to it errors
         # what matters is establish_connection receives proper args
+        
         expect { subject.create(custom_tenant_name) }.to raise_error(Apartment::TenantExists)
       end
     end
@@ -36,7 +38,7 @@ shared_examples_for "a generic apartment adapter able to handle custom configura
     describe "#drop" do
       it "should establish_connection with the separate connection with expected args" do
         expect(Apartment::Adapters::AbstractAdapter::SeparateDbConnectionHandler).to receive(:establish_connection).with(expected_args).and_call_original
-
+      
         # because we dont have another server to connect to it errors
         # what matters is establish_connection receives proper args
         expect { subject.drop(custom_tenant_name) }.to raise_error(Apartment::TenantNotFound)
@@ -80,12 +82,19 @@ shared_examples_for "a generic apartment adapter able to handle custom configura
       mysql: {
         adapter:  'mysql2',
         database: 'override_database',
+        password: 'override_password',        
         username: 'root'
       },
       sqlite: {
         adapter:  'sqlite3',
         database: 'override_database'
-      }
+      },
+      mssql:{
+       adapter: 'sqlserver',
+       database: 'override_database',
+       username: 'overridemssql',
+       password: 'override_password'
+     }
     }
   end
 

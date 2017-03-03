@@ -35,4 +35,22 @@ development:
   min_messages: WARNING
   pool: 5
   timeout: 5000
+
+mssql: &mssql
+ adapter: sqlserver
+ host: host_name
+ username: sa
+ password: default_password
+
+#-----------------------------------------
+# environments
+#-----------------------------------------
+
+development:
+  <<: *mssql
+  database: apartment_mssql_development
+
+test:
+  <<: *mssql
+  database: apartment_mssql_test
 <% end %>
