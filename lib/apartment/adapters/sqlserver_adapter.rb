@@ -1,5 +1,4 @@
 require 'apartment/adapters/abstract_adapter'
-
 module Apartment
   module Tenant
 
@@ -35,7 +34,7 @@ module Apartment
 
       def initialize(config)
         super
-        @default_tenant = config[:database]
+        @default_tenant = "#{config[:database]}"
         reset
       end
 
@@ -57,9 +56,8 @@ module Apartment
       def process_excluded_model(excluded_model)
         excluded_model.constantize.tap do |klass|
           # Ensure that if a schema *was* set, we override
-          table_name = klass.table_name.split('.', 2).last
-
-          klass.table_name = "#{default_tenant}.#{table_name}"
+          table_name = klass.table_name.gsub('.dbo','').split('.', 2).last
+          klass.table_name = "#{default_tenant}.dbo.#{table_name}"
         end
       end
 
@@ -76,6 +74,10 @@ module Apartment
       rescue ActiveRecord::StatementInvalid => exception
         Apartment::Tenant.reset
         raise_connect_error!(tenant, exception)
+      end
+
+      def reset_on_connection_exception?
+        true
       end
 
     private

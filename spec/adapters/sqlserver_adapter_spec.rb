@@ -16,7 +16,7 @@ describe Apartment::Adapters::SqlserverAdapter, database: :mssql do
       ActiveRecord::Base.connection.select_all("SELECT name FROM sys.databases").collect { |row| row['name'] }
     end
     
-    let!(:default_tenant) { subject.switch { ActiveRecord::Base.connection.current_database } }
+    let(:default_tenant) { subject.switch { ActiveRecord::Base.connection.current_database } }
 
     context "using - the equivalent of - schemas" do
       before { Apartment.use_schemas = true }
